@@ -15,7 +15,14 @@ This CLI tool provides three main commands to manage and process items in the sy
 
 ### 1 Init
 
-Extract `Installer/CLI-app.app/Contents/Resources/python_env.zip` to `Installer/CLI-app.app/Contents/Resources/python_env`
+Extract `Installer/CLI-app.app/Contents/Resources/python_env.zip` to `Installer/CLI-app.app/Contents/Resources/python_env`. This step is for build app. Using Nuitka without `--standalone` requires Python binary.
+
+For development, do this step first:
+- `pyenv install 3.11.14` (skip if already have it)
+- `pyenv virtualenv 3.11.14 PyTestInstaller`
+- `pyenv activate PyTestInstaller`
+- `pip install nuitka`
+- `pip install ttkbootstrap`
 
 ### 2 Build
 
