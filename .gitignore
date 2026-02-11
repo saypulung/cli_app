@@ -1,0 +1,8 @@
+*.bin
+*.spec
+*.dmg
+__pycache__
+*.build
+.DS_Store
+*.log
+python_env
