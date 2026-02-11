@@ -8,9 +8,9 @@ This CLI tool provides three main commands to manage and process items in the sy
 
 `python main.py cmd-1 --path test --identifier test`
 
-`python main.py cmd-2 --id 1 --album test`
+`python main.py cmd-2 --id 1 --filter a`
 
-`python main.py cmd-2 --id 1 --tags test,tast,tost`
+`python main.py cmd-3 --id 1 --tags test,tast,tost`
 
 
 ### 1 Init
