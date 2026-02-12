@@ -12,41 +12,8 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 from ttkbootstrap.constants import *
 
-def get_self_dir():
-    # When compiled with Nuitka or frozen
-    if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)
-
-    # When running as normal Python script
-    return os.path.dirname(os.path.abspath(__file__))
-
-
 BASE_DIR = os.getcwd()
 
-
-def get_executable_dir():
-    # 1. Try sys.argv[0] first - this points to the actual executable that was invoked
-    # This is crucial for macOS .app bundles where sys.executable points to the Python interpreter
-    try:
-        executable_path = Path(sys.argv[0]).resolve()
-    except (IndexError, ValueError):
-        # Fallback to sys.executable if sys.argv[0] is not available
-        executable_path = Path(sys.executable).resolve()
-    
-    # If sys.argv[0] points to a Python script in development, use __file__ instead
-    if executable_path.suffix == ".py" and not (".app/Contents/MacOS" in str(executable_path)):
-        executable_path = Path(__file__).resolve()
-
-    # 2. Handle the macOS .app bundle structure
-    # If the path contains 'YourApp.app/Contents/MacOS', we need to go up 3 levels
-    # to get to the directory containing the .app
-    if ".app/Contents/MacOS" in str(executable_path):
-        return executable_path.parents[3]
-    
-    # 3. Otherwise, just return the directory containing the binary
-    return executable_path.parent
-
-app_dir = get_executable_dir()
 
 def get_log_path(app_name):
     if platform.system() == "Darwin":  # macOS
@@ -64,8 +31,6 @@ def get_log_path(app_name):
 
 # 2. Configure the logger
 LOG_FILE = get_log_path("TestApp")
-
-print(f"Logging to: {LOG_FILE}")
 
 # 2. Create the Handler separately
 # This is where interval and backupCount belong!
@@ -89,35 +54,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-logger.info(f"Application started. App directory: {app_dir}")
-logger.info(f"Python executable: {BASE_DIR}")
-
-def detect_base_command():
-
-	script_dir = get_executable_dir()
-	logger.info(f"Detecting base command in script directory: {script_dir}")
-	# Prefer a packaged executable if present next to this file
-	candidates = [
-		os.path.join(script_dir, "main"),
-		os.path.join(script_dir, "main.bin"),
-		os.path.join(script_dir, "main.exe"),
-		os.path.join(script_dir, "main.py"),
-	]
-	for c in candidates:
-		if os.path.exists(c):
-			logger.info(f"Found executable candidate: {c}")
-			# Use the file directly (may be an executable or python script)
-			return c
-
-	# Fallback to invoking with the current Python interpreter
-	main_py = os.path.join(script_dir, "main.py")
-	if os.path.exists(main_py):
-		logger.info(f"Falling back to running main.py with Python: {main_py}")
-		return f"{sys.executable} {shlex.quote(main_py)}"
-
-	# Last resort: rely on PATH
-	return "main"
-
+logger.info(f"Application started. App directory: {BASE_DIR}")
 
 root = tk.Tk()
 root.title("CLI Runner")
@@ -130,9 +67,7 @@ top_frame.pack(fill="x", padx=8, pady=6)
 cmd_frame = ttk.Frame(root)
 cmd_frame.pack(fill="x", padx=8, pady=6)
 
-detected = detect_base_command()
-logger.info(f"Detected base command: {detected}")
-cmd_var = tk.StringVar(value=detected)
+cmd_var = tk.StringVar(value=None)
 
 cmd_label = ttk.Label(cmd_frame, text="Command:")
 cmd_label.pack(side=LEFT, padx=(0, 6))
@@ -181,8 +116,11 @@ def run_command():
 		my_env = os.environ.copy()
 		my_env["PYTHONPATH"] = os.path.join(env_path, "lib/python3.11/site-packages")
 		my_env["PATH"] = os.path.join(env_path, "bin") + os.pathsep + my_env["PATH"]
+
+		cmd = (BASE_DIR + "/main.bin " + args) if isinstance(args, str) else [BASE_DIR + "/main.bin"] + args
+
 		proc = subprocess.Popen(
-			args,
+			cmd,
 			env=my_env,
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT,

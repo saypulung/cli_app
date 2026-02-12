@@ -28,7 +28,9 @@ For development, do this step first:
 
 `nuitka gui.py --static-libpython=no`
 
-`nuitka main.py --static-libpython=no`
+`nuitka main.py --static-libpython=no --include-package=commands`
+
+Note: if there are some packages in the project, add argument `--include-package`
 
 ### 3 Prepare Build
 
